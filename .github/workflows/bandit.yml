@@ -40,7 +40,7 @@ jobs:
     - name: Block PR if Critical Issues
       if: env.critical_findings != '0'
       run: |
-        COMMENT_TEXT="Bandit Code Scan Detected Critical Vulnerabilities :warning:\n\n$(jq -r '.results | map(select(.issue_severity == "HIGH")) | map("* [\(.test_id)] - \(.issue_text) at \(.filename):\(.line_number)") | join("\n")' bandit-results.json)"
+        COMMENT_TEXT="Block"
         gh pr comment ${{ github.event.pull_request.number }} --body "$COMMENT_TEXT"
         exit 1
       env:
