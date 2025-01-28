@@ -1,0 +1,54 @@
+name: Bandit
+
+on:
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  pull-requests: write
+  contents: read 
+
+jobs:
+  bandit-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.12
+
+    - name: Installing Bandit
+      run: pip install bandit
+
+    - name: Run Bandit scan
+      id: bandit
+      run: |
+        bandit -r . --format json -o  bandit-results.json || true
+
+    - name: Analyze Bandit Results
+      id: analyze
+      run: |
+        CRITICAL_FINDINGS=$(jq '.results | map(select(.issue_severity == "HIGH")) | length' bandit-results.json)
+        echo "Found critical issues: $CRITICAL_FINDINGS"
+        echo "critical_findings=$CRITICAL_FINDINGS" >> $GITHUB_ENV
+
+    - name: Block PR if Critical Issues
+      if: env.critical_findings != '0'
+      run: |
+        COMMENT_TEXT="Block"
+        gh pr comment ${{ github.event.pull_request.number }} --body "$COMMENT_TEXT"
+        exit 1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Auto merge PR
+      if: env.critical_findings == '0'
+      run: |         
+        gh pr merge ${{ github.event.pull_request.number }} --merge --auto 
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
