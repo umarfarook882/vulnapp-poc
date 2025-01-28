@@ -5,6 +5,10 @@ on:
     branches:
       - master
 
+permissions:
+  pull-requests: write
+  contents: read 
+
 jobs:
   bandit-scan:
     runs-on: ubuntu-latest
