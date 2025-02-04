@@ -5,3 +5,5 @@ def connect_to_service():
     print(f"Connecting with {username} and {password}")
 
 connect_to_service()
+
+print("test")
